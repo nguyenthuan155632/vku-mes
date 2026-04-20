@@ -11,8 +11,6 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
-    # Run migrations then start the Next.js server
-    startCommand: sh -c "node --import tsx scripts/migrate.ts && node server.js"
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL
@@ -37,10 +35,9 @@ services:
   - type: worker
     name: vku-mes-worker
     runtime: docker
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./Dockerfile.worker
     dockerContext: .
     plan: free
-    startCommand: node dist/worker/worker/index.js
     envVars:
       - key: DATABASE_URL
         fromDatabase:
