@@ -1,4 +1,5 @@
-CREATE EXTENSION IF NOT EXISTS timescaledb;
+-- Enable TimescaleDB when available (local Docker); silently skip on vanilla Postgres (e.g. Render)
+DO $$ BEGIN EXECUTE 'CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE'; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 CREATE TYPE pulse_source AS ENUM ('sensor', 'manual');
 CREATE TYPE alert_type   AS ENUM ('silent_machine', 'low_output');
@@ -24,7 +25,7 @@ CREATE TABLE production_metrics (
   note            text,
   PRIMARY KEY (time, workcenter_id)
 );
-SELECT create_hypertable('production_metrics', 'time', chunk_time_interval => INTERVAL '1 day');
+DO $$ BEGIN PERFORM create_hypertable('production_metrics', 'time', chunk_time_interval => INTERVAL '1 day'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
 CREATE INDEX ON production_metrics (workcenter_id, time DESC);
 
 CREATE TABLE downtime_events (
