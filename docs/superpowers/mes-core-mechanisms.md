@@ -50,3 +50,13 @@ Hệ thống tính điểm tỷ lệ OEE tự động qua 3 cấu phần lõi th
    = `(Tổng Hàng - Hàng bị lỗi phế phẩm)` / `Tổng hàng hóa`.
 
 > **OEE** = Availability × Performance × Quality (Giới hạn kịch điểm là 100%).
+
+## 5. Giải thích các Thông số Giao diện Quản lý Trạm làm việc (Work Center)
+
+Khi thiết lập các thiết bị/trạm làm việc trên hệ thống, có 5 chỉ số cấu hình giao diện đóng vai trò quyết định đến cách MES cảnh báo:
+
+- **Mã (Code):** Mã định danh duy nhất cho từng thiết bị hoặc trạm làm việc (ví dụ: `WC01`, `WC02`). Giúp hệ thống phần mềm nhận diện độc nhất thiết bị trong cơ sở dữ liệu mà không bị trùng lặp.
+- **Tên (Name):** Tên gọi thông thường mô tả chức năng thiết bị (ví dụ: Máy Đóng Gói 01, Máy Nén Khí 02) nhằm mục đích hiển thị giao diện cho người quản lý dễ dàng nhận biết.
+- **Mục tiêu/giờ (Target/Hour):** Năng suất kỳ vọng hoặc công suất lý thuyết tiêu chuẩn của thiết bị đó trong vòng 1 giờ làm việc (đơn vị: sản phẩm/giờ). Chỉ số này là mốc (benchmark) cơ sở để tính toán cấu phần Hiệu năng (Performance) cho OEE.
+- **Ngưỡng im lặng (phút) (Silence Threshold):** Khoảng thời gian dung sai tối đa mà hệ thống cho phép một máy không gửi bất kì tín hiệu hoạt động (Pulse) nào về trung tâm. Nếu vượt quá (ví dụ: 10 phút), hệ thống sẽ lập tức can thiệp tự động tạo một phiên `Downtime open` và báo máy chuyển sang trạng thái "Dừng".
+- **Ngưỡng SL thấp (%) (Low Quantity Threshold):** Mức ranh giới tỷ lệ phần trăm thấp nhất được chấp nhận cho năng suất. Nếu sản lượng thực tế trong khung 1 giờ vừa qua chia cho `Mục tiêu/giờ` bị rơi xuống dưới ngưỡng này (ví dụ: < 60%), thuật toán quét (Worker Engine) sẽ kích hoạt một cảnh báo `low_output` đỏ trên màn hình xưởng để đốc công đi kiểm tra vấn đề.
