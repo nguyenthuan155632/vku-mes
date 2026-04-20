@@ -17,7 +17,7 @@ services:
     build: .
     command: ["sh", "-c", "node --import tsx scripts/migrate.ts && node server.js"]
     environment:
-      DATABASE_URL: postgres://mes:mes@db:5432/mes
+      DATABASE_URL: ${DATABASE_URL}
       SESSION_SECRET: ${SESSION_SECRET}
       OPERATOR_PASSWORD: ${OPERATOR_PASSWORD}
       SUPERVISOR_PASSWORD: ${SUPERVISOR_PASSWORD}
@@ -32,7 +32,7 @@ services:
     build: .
     command: ["node", "dist/worker/worker/index.js"]
     environment:
-      DATABASE_URL: postgres://mes:mes@db:5432/mes
+      DATABASE_URL: ${DATABASE_URL}
       TZ: Asia/Ho_Chi_Minh
     depends_on:
       db: { condition: service_healthy }
