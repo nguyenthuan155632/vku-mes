@@ -181,6 +181,14 @@ computeOEE(input: {
 - `quality = (totalQty - defectQty) / totalQty`. If `totalQty === 0` → `1`. Then clamped.
 - `oee = availability * performance * quality`.
 
+`runtimeMin` is computed by the caller (worker or `/api/dashboard`) as:
+
+```
+runtimeMin = elapsedShiftMin - downtimeWithinShiftMin
+```
+
+where `elapsedShiftMin = clamp((min(now, shift.endsAt) - shift.startsAt) in minutes, 0, 480)` and `downtimeWithinShiftMin` is the sum of downtime event durations clamped to the shift window. For closed shifts, `min(now, shift.endsAt) = shift.endsAt` so `elapsedShiftMin = 480`.
+
 ### 4.3 `hourly.ts`
 
 ```ts
@@ -297,7 +305,11 @@ Stack: Next.js 14 App Router, Tailwind, shadcn/ui (`button`, `card`, `dialog`, `
 | `/supervisor` | supervisor + viewer | Summary, downtime log, hourly chart, alert feed. |
 | `/admin/workcenters` | supervisor only | List + create/edit form for workcenters. |
 
-`src/middleware.ts` redirects unauthenticated → `/login` and `viewer` → `/supervisor` if they hit `/admin/workcenters`.
+`src/middleware.ts` redirects:
+
+- unauthenticated → `/login`
+- `operator` hitting `/supervisor` or `/admin/workcenters` → `/`
+- `viewer` hitting `/admin/workcenters` → `/supervisor`
 
 ### Operator dashboard `/`
 
@@ -461,11 +473,15 @@ Run via `docker compose exec web npm run seed`.
 ### Pulse simulator (`scripts/simulate-pulses.js`)
 
 ```
-node scripts/simulate-pulses.js --base http://localhost:3000 --token $PULSE_INGEST_TOKEN
+node scripts/simulate-pulses.js \
+  --base http://localhost:3000 \
+  --token $PULSE_INGEST_TOKEN \
+  --password $SUPERVISOR_PASSWORD
 ```
 
-- Reads workcenters from `GET /api/workcenters`.
-- Loops every 2–5s (random), picks a random workcenter, posts `{ workcenter_id, qty: random(1..3), source: 'sensor' }` to `/api/pulse`.
+- Logs in with supervisor password to obtain a session cookie, then reads workcenters from `GET /api/workcenters`.
+- Posts pulses to `/api/pulse` using the bearer token (the cookie is only used for the workcenter list).
+- Loops every 2–5s (random), picks a random workcenter, posts `{ workcenter_id, qty: random(1..3), source: 'sensor' }`.
 - 5% of ticks: skip a workcenter for 12 minutes to trigger `silent_machine` alert + downtime event.
 - Plain Node 20+, no deps beyond built-in `fetch`.
 
