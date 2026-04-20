@@ -2,6 +2,6 @@
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
-  experimental: { serverActions: {} }
+  experimental: { serverActions: {}, instrumentationHook: true }
 };
 export default nextConfig;

@@ -28,14 +28,5 @@ services:
       db: { condition: service_healthy }
     ports: ["3000:3000"]
 
-  worker:
-    build: .
-    command: ["node", "dist/worker/worker/index.js"]
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      TZ: Asia/Ho_Chi_Minh
-    depends_on:
-      db: { condition: service_healthy }
-
 volumes:
   db_data:
