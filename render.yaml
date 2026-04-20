@@ -12,7 +12,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
-    healthCheckPath: /api/auth/me
+    healthCheckPath: /api/health
     envVars:
       - key: HOSTNAME
         value: 0.0.0.0

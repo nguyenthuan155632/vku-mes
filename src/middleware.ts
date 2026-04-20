@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { readSession, SESSION_COOKIE_NAME } from '@/server/auth/session';
 
 const PUBLIC_PATHS = ['/login'];
-const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/auth/logout', '/api/pulse'];
+const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/auth/logout', '/api/pulse', '/api/health'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
