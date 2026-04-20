@@ -38,7 +38,7 @@ Thay đổi các mật khẩu trong `.env` trước khi đưa lên production.
 ## Kiến trúc
 
 - `web` (container): Next.js 14 phục vụ UI và các API `/api/*`.
-- `worker` (container): ticker 30 giây phát hiện dừng máy, cảnh báo và đóng ca.
+- `worker` (container): ticker 5 giây phát hiện dừng máy, cảnh báo và đóng ca.
 - `db` (container): PostgreSQL 15 + TimescaleDB 2.x, lưu tín hiệu sản xuất dạng hypertable.
 
 Ca 1: 08:00–20:00 (UTC+7). Ca 2: 20:00–08:00 hôm sau.

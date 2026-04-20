@@ -110,4 +110,4 @@ async function tick() {
 
 console.log('[worker] starting, tick every 30s');
 tick().catch((e) => console.error('[worker] initial tick failed', e));
-cron.schedule('*/30 * * * * *', () => { tick().catch((e) => console.error('[worker] tick failed', e)); });
+cron.schedule('*/5 * * * * *', () => { tick().catch((e) => console.error('[worker] tick failed', e)); });
