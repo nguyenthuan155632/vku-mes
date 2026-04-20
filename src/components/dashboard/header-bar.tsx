@@ -12,7 +12,7 @@ export function HeaderBar({ totals }: { totals: { running: number; stopped: numb
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-background/95 px-6 py-3 backdrop-blur">
       <div className="flex items-center gap-3">
-        <span className="text-base font-semibold">{T.appTitle}</span>
+        <Link href="/" className="text-base font-semibold">{T.appTitle}</Link>
         <LiveClock />
       </div>
       <div className="flex items-center gap-2">
