@@ -9,6 +9,7 @@ import { T } from '@/lib/strings';
 
 interface DashboardResp {
   totals: { running: number; stopped: number; shiftQty: number };
+  shiftWindow: { shiftLengthMin: number } | null;
   workcenters: Array<{ id: number; code: string; name: string; status: 'running' | 'stopped'; shiftQty: number; hourly: Array<{ label: string; qty: number }>; runtimeMinutes: number; performancePct: number }>;
 }
 
@@ -27,7 +28,7 @@ export default function DashboardPage() {
     <div>
       <HeaderBar totals={data.totals} />
       <main className="p-6">
-        <MachineTable workcenters={data.workcenters} role={role} />
+        <MachineTable workcenters={data.workcenters} shiftLengthMin={data.shiftWindow?.shiftLengthMin ?? 720} role={role} />
       </main>
     </div>
   );

@@ -11,7 +11,7 @@ import { computeOEE } from '@/server/engine/oee';
 
 export interface DashboardPayload {
   now: string;
-  shiftWindow: { date: string; number: number; name: string; startsAt: string; endsAt: string } | null;
+  shiftWindow: { date: string; number: number; name: string; startsAt: string; endsAt: string; shiftLengthMin: number } | null;
   totals: { running: number; stopped: number; shiftQty: number };
   workcenters: Array<{
     id: number;
@@ -105,7 +105,7 @@ export async function buildDashboard(db: Database, now = new Date()): Promise<Da
   return {
     now: now.toISOString(),
     shiftWindow: shift
-      ? { date: shift.date, number: shift.number, name: shift.name, startsAt: shift.startsAt.toISOString(), endsAt: shift.endsAt.toISOString() }
+      ? { date: shift.date, number: shift.number, name: shift.name, startsAt: shift.startsAt.toISOString(), endsAt: shift.endsAt.toISOString(), shiftLengthMin: shift.shiftLengthMin }
       : null,
     totals: { running, stopped, shiftQty: workcenterPayload.reduce((s, w) => s + w.shiftQty, 0) },
     workcenters: workcenterPayload

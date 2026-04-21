@@ -7,7 +7,7 @@ import type { Role } from '@/lib/types';
 
 type WcData = Parameters<typeof MachineRow>[0]['wc'];
 
-export function MachineTable({ workcenters, role }: { workcenters: WcData[]; role: Role }) {
+export function MachineTable({ workcenters, shiftLengthMin, role }: { workcenters: WcData[]; shiftLengthMin: number; role: Role }) {
   const canEdit = role === 'operator' || role === 'supervisor';
   return (
     <Card className="p-2">
@@ -26,7 +26,7 @@ export function MachineTable({ workcenters, role }: { workcenters: WcData[]; rol
         </TableHeader>
         <TableBody>
           {workcenters.map((wc, i) => (
-            <MachineRow key={wc.id} index={i} wc={wc} canEdit={canEdit} />
+            <MachineRow key={wc.id} index={i} wc={wc} shiftLengthMin={shiftLengthMin} canEdit={canEdit} />
           ))}
         </TableBody>
       </Table>
