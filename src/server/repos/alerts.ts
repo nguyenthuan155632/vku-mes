@@ -4,13 +4,13 @@ import type { Database } from '@/server/db/types';
 
 export function alertsRepo(db: Database) {
   return {
-    insert: async (i: { workcenter_id: number; type: 'silent_machine' | 'low_output'; message: string }) => {
+    insert: async (i: { workcenter_id: number; type: 'silent_machine' | 'low_output' | 'unscheduled_production'; message: string }) => {
       const [row] = await db.insert(schema.alerts).values({
         workcenterId: i.workcenter_id, type: i.type, message: i.message
       }).returning();
       return row;
     },
-    hasOpen: async (workcenter_id: number, type: 'silent_machine' | 'low_output') => {
+    hasOpen: async (workcenter_id: number, type: 'silent_machine' | 'low_output' | 'unscheduled_production') => {
       const [row] = await db.select({ id: schema.alerts.id }).from(schema.alerts)
         .where(and(
           eq(schema.alerts.workcenterId, workcenter_id),
