@@ -24,6 +24,12 @@ export default function AdminWorkcentersPage() {
         >
           {T.common.backToDashboard}
         </Link>
+        <Link
+          href="/admin/shifts"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
+        >
+          → {T.shifts.title}
+        </Link>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{T.admin.title}</CardTitle>

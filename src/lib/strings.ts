@@ -44,6 +44,28 @@ export const T = {
     save: 'Lưu',
     edit: 'Sửa'
   },
+  shifts: {
+    title: 'Quản lý ca làm việc',
+    addShift: 'Thêm ca',
+    active: 'Đang hoạt động',
+    inactive: 'Tắt',
+    enable: 'Bật',
+    disable: 'Tắt',
+    edit: 'Sửa',
+    delete: 'Xoá',
+    deleteConfirm: 'Xác nhận xoá ca này?',
+    columns: { number: '#', name: 'Tên ca', start: 'Bắt đầu', end: 'Kết thúc', duration: 'Thời lượng', status: 'Trạng thái' },
+    form: {
+      createTitle: 'Thêm ca mới',
+      editTitle: 'Sửa ca',
+      name: 'Tên ca',
+      shiftNumber: 'Số ca',
+      startTime: 'Giờ bắt đầu',
+      endTime: 'Giờ kết thúc',
+      duration: 'Thời lượng',
+      crossMidnight: '(qua nửa đêm)',
+    }
+  },
   output: {
     title: (name: string) => `Sản lượng — ${name}`,
     timeRange: 'Khoảng thời gian',
