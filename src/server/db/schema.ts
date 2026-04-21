@@ -1,7 +1,7 @@
-import { pgTable, serial, text, integer, smallint, timestamp, pgEnum, numeric, date, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, smallint, boolean, timestamp, pgEnum, numeric, date, uniqueIndex, index } from 'drizzle-orm/pg-core';
 
 export const pulseSource = pgEnum('pulse_source', ['sensor', 'manual']);
-export const alertType   = pgEnum('alert_type',   ['silent_machine', 'low_output']);
+export const alertType   = pgEnum('alert_type',   ['silent_machine', 'low_output', 'unscheduled_production']);
 export const userRole    = pgEnum('user_role',    ['operator', 'supervisor', 'viewer']);
 
 export const workcenters = pgTable('workcenters', {
@@ -58,4 +58,14 @@ export const alerts = pgTable('alerts', {
   triggeredAt: timestamp('triggered_at', { withTimezone: true }).notNull().defaultNow(),
   resolvedAt: timestamp('resolved_at', { withTimezone: true }),
   resolvedBy: userRole('resolved_by')
+});
+
+export const shiftTemplates = pgTable('shift_templates', {
+  id:          serial('id').primaryKey(),
+  name:        text('name').notNull(),
+  shiftNumber: smallint('shift_number').notNull(),
+  startTime:   text('start_time').notNull(),
+  endTime:     text('end_time').notNull(),
+  isActive:    boolean('is_active').notNull().default(true),
+  createdAt:   timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
