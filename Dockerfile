@@ -8,6 +8,16 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
+FROM base AS development
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# Use development environment for fast rebuilding and Hot Module Replacement (HMR)
+# This stage is used locally via docker-compose
+ENV NODE_ENV=development
+EXPOSE 3000
+CMD ["pnpm", "dev"]
+
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -16,6 +26,8 @@ RUN pnpm worker:build
 
 FROM base AS runtime
 WORKDIR /app
+# Use production environment for optimized bundles and performance
+# This stage is used for the final deployed image
 ENV NODE_ENV=production
 RUN apk add --no-cache tzdata && cp /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime
 # Next.js standalone output

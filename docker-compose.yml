@@ -14,8 +14,10 @@ services:
       retries: 10
 
   web:
-    build: .
-    command: ["sh", "-c", "node --import tsx scripts/migrate.ts && node server.js"]
+    build:
+      context: .
+      target: development
+    command: ["sh", "-c", "node --import tsx scripts/migrate.ts && pnpm dev"]
     environment:
       DATABASE_URL: postgresql://mes:mes@db:5432/mes
       SESSION_SECRET: ${SESSION_SECRET}
@@ -24,6 +26,10 @@ services:
       VIEWER_PASSWORD: ${VIEWER_PASSWORD}
       PULSE_INGEST_TOKEN: ${PULSE_INGEST_TOKEN}
       TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
     depends_on:
       db: { condition: service_healthy }
     ports: ["3000:3000"]

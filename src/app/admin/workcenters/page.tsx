@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
 import { HeaderBar } from '@/components/dashboard/header-bar';
@@ -17,6 +18,12 @@ export default function AdminWorkcentersPage() {
     <div>
       <HeaderBar totals={dash?.totals ?? { running: 0, stopped: 0, shiftQty: 0 }} />
       <main className="flex flex-col gap-4 p-6">
+        <Link
+          href="/"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
+        >
+          {T.common.backToDashboard}
+        </Link>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{T.admin.title}</CardTitle>

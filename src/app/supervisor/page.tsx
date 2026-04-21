@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
 import { useAuth } from '@/hooks/use-auth';
@@ -27,6 +28,12 @@ export default function SupervisorPage() {
     <div>
       <HeaderBar totals={dash.totals} />
       <main className="flex flex-col gap-6 p-6">
+        <Link
+          href="/"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
+        >
+          {T.common.backToDashboard}
+        </Link>
         <SummaryCards data={{
           shiftQty: dash.totals.shiftQty,
           avgOee: weightedOee,

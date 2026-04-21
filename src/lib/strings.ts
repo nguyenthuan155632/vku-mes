@@ -18,6 +18,7 @@ export const T = {
       runtime: 'Thời gian hoạt động',
       performance: 'Hiệu suất'
     },
+    edit: 'Nhập sản lượng',
     manualEntry: {
       title: (name: string) => `Nhập sản lượng — ${name}`,
       qty: 'Số lượng',
@@ -43,11 +44,34 @@ export const T = {
     save: 'Lưu',
     edit: 'Sửa'
   },
+  output: {
+    title: (name: string) => `Sản lượng — ${name}`,
+    timeRange: 'Khoảng thời gian',
+    hours: (n: number) => `${n} giờ`,
+    chart: 'Biểu đồ sản lượng theo giờ',
+    cards: {
+      totalQty: 'Tổng sản lượng',
+      defectQty: 'Phế phẩm',
+      defectRate: 'Tỷ lệ phế'
+    },
+    table: {
+      hour: 'Giờ',
+      qty: 'Sản lượng',
+      defectQty: 'Phế phẩm',
+      defectRate: 'Tỷ lệ phế',
+      noData: 'Không có dữ liệu trong khoảng thời gian này'
+    },
+    legend: {
+      qty: 'Sản lượng',
+      defect: 'Phế phẩm'
+    }
+  },
   common: {
     logout: 'Đăng xuất',
     loading: 'Đang tải...',
     error: 'Đã xảy ra lỗi',
     yes: 'Có',
-    no: 'Không'
+    no: 'Không',
+    backToDashboard: '← Về Dashboard'
   }
 };

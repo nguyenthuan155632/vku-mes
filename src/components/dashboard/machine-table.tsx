@@ -21,6 +21,7 @@ export function MachineTable({ workcenters, role }: { workcenters: WcData[]; rol
             <TableHead>Sản lượng 4 giờ gần nhất</TableHead>
             <TableHead>{T.dashboard.headers.runtime}</TableHead>
             <TableHead>{T.dashboard.headers.performance}</TableHead>
+            <TableHead className="w-10" />
           </TableRow>
         </TableHeader>
         <TableBody>
