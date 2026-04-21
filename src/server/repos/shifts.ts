@@ -4,7 +4,7 @@ import type { Database } from '@/server/db/types';
 
 export function shiftsRepo(db: Database) {
   return {
-    upsertCurrent: async (i: { workcenter_id: number; shift_date: string; shift_number: 1 | 2; starts_at: Date; ends_at: Date }) => {
+    upsertCurrent: async (i: { workcenter_id: number; shift_date: string; shift_number: number; starts_at: Date; ends_at: Date }) => {
       // If a row exists, return it; otherwise insert.
       const existing = await db.select().from(schema.shifts)
         .where(and(
