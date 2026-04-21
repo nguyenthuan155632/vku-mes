@@ -4,13 +4,14 @@ import type { Database } from '@/server/db/types';
 import { workcentersRepo } from '@/server/repos/workcenters';
 import { productionRepo } from '@/server/repos/production';
 import { downtimeRepo } from '@/server/repos/downtime';
-import { shiftWindowFor, SHIFT_LENGTH_MIN } from '@/server/engine/shift';
+import { shiftTemplatesRepo } from '@/server/repos/shiftTemplates';
+import { shiftWindowFor, type ShiftTemplate } from '@/server/engine/shift';
 import { bucketHourly } from '@/server/engine/hourly';
 import { computeOEE } from '@/server/engine/oee';
 
 export interface DashboardPayload {
   now: string;
-  shiftWindow: { date: string; number: 1 | 2; startsAt: string; endsAt: string };
+  shiftWindow: { date: string; number: number; name: string; startsAt: string; endsAt: string } | null;
   totals: { running: number; stopped: number; shiftQty: number };
   workcenters: Array<{
     id: number;
@@ -30,18 +31,28 @@ export async function buildDashboard(db: Database, now = new Date()): Promise<Da
   const prod = productionRepo(db);
   const dt = downtimeRepo(db);
   const workcenters = await wc.list();
-  const shift = shiftWindowFor(now);
+
+  const templateRows = await shiftTemplatesRepo(db).listActive();
+  const templates: ShiftTemplate[] = templateRows.map(r => ({
+    id: r.id, name: r.name, shiftNumber: r.shiftNumber,
+    startTime: r.startTime, endTime: r.endTime,
+  }));
+
+  const shift = shiftWindowFor(now, templates);
   const fourHoursAgo = new Date(now.getTime() - 4 * 3600_000);
 
-  // All-in-one queries (no N+1): shift aggregate and hourly bucket across all workcenters
-  const shiftAgg = await db.execute<{ workcenter_id: number; qty: string; defect_qty: string }>(sql`
-    SELECT workcenter_id,
-           COALESCE(SUM(qty), 0)::text AS qty,
-           COALESCE(SUM(defect_qty), 0)::text AS defect_qty
-    FROM production_metrics
-    WHERE time >= ${shift.startsAt} AND time < ${now}
-    GROUP BY workcenter_id
-  `);
+  let shiftAggRows: Array<{ workcenter_id: number; qty: string; defect_qty: string }> = [];
+  if (shift) {
+    const result = await db.execute<{ workcenter_id: number; qty: string; defect_qty: string }>(sql`
+      SELECT workcenter_id,
+             COALESCE(SUM(qty), 0)::text AS qty,
+             COALESCE(SUM(defect_qty), 0)::text AS defect_qty
+      FROM production_metrics
+      WHERE time >= ${shift.startsAt} AND time < ${now}
+      GROUP BY workcenter_id
+    `);
+    shiftAggRows = result.rows;
+  }
 
   const hourly = await prod.hourlyAll(fourHoursAgo, now);
 
@@ -50,16 +61,21 @@ export async function buildDashboard(db: Database, now = new Date()): Promise<Da
   `);
   const stoppedIds = new Set(openDowns.rows.map((r) => r.workcenter_id));
 
-  // For each workcenter compute runtime minutes (elapsed shift - downtime within shift)
-  const elapsedMin = Math.min(SHIFT_LENGTH_MIN, Math.max(0, Math.round((now.getTime() - shift.startsAt.getTime()) / 60_000)));
+  const elapsedMin = shift
+    ? Math.min(shift.shiftLengthMin, Math.max(0, Math.round((now.getTime() - shift.startsAt.getTime()) / 60_000)))
+    : 0;
 
   const perWcDowntime = new Map<number, number>();
   for (const w of workcenters) {
-    perWcDowntime.set(w.id, await dt.minutesWithin(w.id, shift.startsAt, now));
+    if (shift) {
+      perWcDowntime.set(w.id, await dt.minutesWithin(w.id, shift.startsAt, now));
+    } else {
+      perWcDowntime.set(w.id, 0);
+    }
   }
 
   const shiftRowByWc = new Map<number, { qty: number; defect: number }>();
-  for (const r of shiftAgg.rows) shiftRowByWc.set(r.workcenter_id, { qty: Number(r.qty), defect: Number(r.defect_qty) });
+  for (const r of shiftAggRows) shiftRowByWc.set(r.workcenter_id, { qty: Number(r.qty), defect: Number(r.defect_qty) });
 
   const workcenterPayload = workcenters.map((w) => {
     const agg = shiftRowByWc.get(w.id) ?? { qty: 0, defect: 0 };
@@ -67,7 +83,7 @@ export async function buildDashboard(db: Database, now = new Date()): Promise<Da
     const buckets = bucketHourly(hourlyRows, now, 4).map((b) => ({ label: b.hourLabel, qty: b.qty }));
     const runtimeMinutes = Math.max(0, elapsedMin - (perWcDowntime.get(w.id) ?? 0));
     const oee = computeOEE({
-      shiftLengthMin: SHIFT_LENGTH_MIN,
+      shiftLengthMin: shift?.shiftLengthMin ?? 720,
       runtimeMin: runtimeMinutes,
       totalQty: agg.qty,
       defectQty: agg.defect,
@@ -88,7 +104,9 @@ export async function buildDashboard(db: Database, now = new Date()): Promise<Da
 
   return {
     now: now.toISOString(),
-    shiftWindow: { date: shift.date, number: shift.number, startsAt: shift.startsAt.toISOString(), endsAt: shift.endsAt.toISOString() },
+    shiftWindow: shift
+      ? { date: shift.date, number: shift.number, name: shift.name, startsAt: shift.startsAt.toISOString(), endsAt: shift.endsAt.toISOString() }
+      : null,
     totals: { running, stopped, shiftQty: workcenterPayload.reduce((s, w) => s + w.shiftQty, 0) },
     workcenters: workcenterPayload
   };

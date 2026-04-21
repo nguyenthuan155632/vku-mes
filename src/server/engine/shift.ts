@@ -1,59 +1,72 @@
 const VN_OFFSET_HOURS = 7;
-const SHIFT_LEN_MIN = 720; // each shift is 12 h (08:00→20:00 or 20:00→08:00)
 
-export type ShiftNumber = 1 | 2;
+export type ShiftTemplate = {
+  id: number;
+  name: string;
+  shiftNumber: number;
+  startTime: string; // "HH:MM" Vietnam local
+  endTime: string;   // "HH:MM" Vietnam local
+};
 
 export interface ShiftWindow {
-  date: string;            // YYYY-MM-DD (Vietnam local)
-  number: ShiftNumber;
+  date: string;          // YYYY-MM-DD anchored to shift start date (Vietnam)
+  number: number;
+  name: string;
   startsAt: Date;
   endsAt: Date;
+  shiftLengthMin: number;
 }
 
-function toVnParts(d: Date) {
-  const vn = new Date(d.getTime() + VN_OFFSET_HOURS * 3600_000);
-  return {
-    y: vn.getUTCFullYear(),
-    m: vn.getUTCMonth(),     // 0-based
-    d: vn.getUTCDate(),
-    h: vn.getUTCHours()
-  };
+function timeToMin(t: string): number {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
 }
 
-function vnMidnightUtc(y: number, m: number, d: number): Date {
-  // Midnight Vietnam = 17:00 UTC on (previous day)
-  return new Date(Date.UTC(y, m, d) - VN_OFFSET_HOURS * 3600_000);
+function vnMidnightUtc(y: number, mo: number, d: number): Date {
+  return new Date(Date.UTC(y, mo, d) - VN_OFFSET_HOURS * 3600_000);
 }
 
-function formatDate(y: number, m: number, d: number): string {
+function formatDate(y: number, mo: number, d: number): string {
   const pad = (n: number) => String(n).padStart(2, '0');
-  return `${y}-${pad(m + 1)}-${pad(d)}`;
+  return `${y}-${pad(mo + 1)}-${pad(d)}`;
 }
 
-export function shiftWindowFor(now: Date): ShiftWindow {
-  const p = toVnParts(now);
-  // Shift 1 covers Vietnam-local 08:00..20:00 on date p.y/p.m/p.d
-  if (p.h >= 8 && p.h < 20) {
-    const midnight = vnMidnightUtc(p.y, p.m, p.d);
-    const startsAt = new Date(midnight.getTime() + 8 * 3600_000);
-    const endsAt = new Date(startsAt.getTime() + SHIFT_LEN_MIN * 60_000);
-    return { date: formatDate(p.y, p.m, p.d), number: 1, startsAt, endsAt };
+/**
+ * Returns the ShiftWindow whose window covers `now`, or null if no template covers it.
+ * Cross-midnight templates are anchored to the date on which they start.
+ */
+export function shiftWindowFor(now: Date, templates: ShiftTemplate[]): ShiftWindow | null {
+  const vnNow = new Date(now.getTime() + VN_OFFSET_HOURS * 3600_000);
+  const y = vnNow.getUTCFullYear();
+  const mo = vnNow.getUTCMonth();
+  const d = vnNow.getUTCDate();
+
+  for (const tpl of templates) {
+    const startMin = timeToMin(tpl.startTime);
+    const endMin = timeToMin(tpl.endTime);
+    const crossMidnight = endMin <= startMin;
+    const durationMin = crossMidnight ? (1440 - startMin + endMin) : (endMin - startMin);
+
+    // Try today's VN-date anchor
+    const midnight = vnMidnightUtc(y, mo, d);
+    const startsAt = new Date(midnight.getTime() + startMin * 60_000);
+    const endsAt = new Date(startsAt.getTime() + durationMin * 60_000);
+    if (now >= startsAt && now < endsAt) {
+      return { date: formatDate(y, mo, d), number: tpl.shiftNumber, name: tpl.name, startsAt, endsAt, shiftLengthMin: durationMin };
+    }
+
+    // Cross-midnight: also try yesterday's anchor (e.g. 02:00 VN is inside 20:00→08:00 started yesterday)
+    if (crossMidnight) {
+      const prev = new Date(Date.UTC(y, mo, d) - 24 * 3600_000);
+      const py = prev.getUTCFullYear(), pmo = prev.getUTCMonth(), pd = prev.getUTCDate();
+      const prevMidnight = vnMidnightUtc(py, pmo, pd);
+      const prevStartsAt = new Date(prevMidnight.getTime() + startMin * 60_000);
+      const prevEndsAt = new Date(prevStartsAt.getTime() + durationMin * 60_000);
+      if (now >= prevStartsAt && now < prevEndsAt) {
+        return { date: formatDate(py, pmo, pd), number: tpl.shiftNumber, name: tpl.name, startsAt: prevStartsAt, endsAt: prevEndsAt, shiftLengthMin: durationMin };
+      }
+    }
   }
 
-  // Shift 2 covers Vietnam-local 20:00..08:00 next day.
-  // If current Vietnam hour is 20-23, shift 2 is anchored to today's date.
-  // If current Vietnam hour is 0-7, shift 2 is anchored to YESTERDAY's date.
-  let anchorY = p.y, anchorM = p.m, anchorD = p.d;
-  if (p.h < 8) {
-    const prev = new Date(Date.UTC(p.y, p.m, p.d) - 24 * 3600_000);
-    anchorY = prev.getUTCFullYear();
-    anchorM = prev.getUTCMonth();
-    anchorD = prev.getUTCDate();
-  }
-  const anchorMidnight = vnMidnightUtc(anchorY, anchorM, anchorD);
-  const startsAt = new Date(anchorMidnight.getTime() + 20 * 3600_000);
-  const endsAt = new Date(startsAt.getTime() + SHIFT_LEN_MIN * 60_000);
-  return { date: formatDate(anchorY, anchorM, anchorD), number: 2, startsAt, endsAt };
+  return null;
 }
-
-export const SHIFT_LENGTH_MIN = SHIFT_LEN_MIN;
